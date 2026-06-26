@@ -11,22 +11,23 @@ st.set_page_config(page_title="Style Rotation Board", layout="wide")
 st.title("Market Sentiment & Style Rotation Board")
 st.write("""
 This dashboard monitors global market momentum to determine risk aversion. 
-* **Favor Relative Strength (Momentum):** When recent market success is above the historical average (investors are risk-tolerant)[cite: 1].
-* **Favor Relative Value:** When recent market success is below the historical average (investors are risk-averse)[cite: 1].
+* **Favor Relative Strength (Momentum):** When recent market success is above the historical average (investors are risk-tolerant).
+* **Favor Relative Value:** When recent market success is below the historical average (investors are risk-averse).
 """)
 
 # ---------------------------------------------------------
 # 2. DATA FETCHING & PROCESSING (Cached for performance)
 # ---------------------------------------------------------
-# The ttl=3600 ensures the app checks for new Yahoo Finance data every hour
 @st.cache_data(ttl=3600) 
 def load_and_process_data(ticker="VT"):
     # Download data up to today
     today = datetime.date.today().strftime("%Y-%m-%d")
     data = yf.download(ticker, start="2010-01-01", end=today, interval="1mo")
     
-    # NEW FIX: Safely extract 'Adj Close' regardless of yfinance version
+    # Safely extract 'Adj Close' regardless of yfinance version
     df = data['Adj Close'].copy()
+    
+    # If it extracts as a Series, convert it back to a DataFrame
     if isinstance(df, pd.Series):
         df = pd.DataFrame(df)
         
@@ -53,6 +54,10 @@ def load_and_process_data(ticker="VT"):
     df['Favored_Style'] = df.apply(determine_style, axis=1)
     
     return df
+
+# Fetch the data (THIS IS THE LINE THAT WAS MISSING!)
+with st.spinner("Pulling real-time market data..."):
+    df = load_and_process_data("VT")
 
 # ---------------------------------------------------------
 # 3. DASHBOARD METRICS (CURRENT STATUS)
