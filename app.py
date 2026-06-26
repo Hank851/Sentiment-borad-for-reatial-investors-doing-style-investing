@@ -25,8 +25,11 @@ def load_and_process_data(ticker="VT"):
     today = datetime.date.today().strftime("%Y-%m-%d")
     data = yf.download(ticker, start="2010-01-01", end=today, interval="1mo")
     
-    # Isolate Adjusted Close
-    df = data[['Adj Close']].copy()
+    # NEW FIX: Safely extract 'Adj Close' regardless of yfinance version
+    df = data['Adj Close'].copy()
+    if isinstance(df, pd.Series):
+        df = pd.DataFrame(df)
+        
     df.columns = ['Global_Market']
     
     # Calculate the 12-month rolling return
@@ -50,10 +53,6 @@ def load_and_process_data(ticker="VT"):
     df['Favored_Style'] = df.apply(determine_style, axis=1)
     
     return df
-
-# Fetch the data
-with st.spinner("Pulling real-time market data..."):
-    df = load_and_process_data("VT")
 
 # ---------------------------------------------------------
 # 3. DASHBOARD METRICS (CURRENT STATUS)
