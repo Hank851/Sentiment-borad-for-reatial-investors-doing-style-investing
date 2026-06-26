@@ -27,17 +27,17 @@ def load_and_process_data(ticker="VT"):
     data = stock.history(start="2010-01-01", interval="1mo")
     
     # history() automatically adjusts prices, so 'Close' is the adjusted close
-    df = data[['Close']].copy()
-    df.columns = ['Global_Market']
+    df_processed = data[['Close']].copy()
+    df_processed.columns = ['Global_Market']
     
     # Calculate the 12-month rolling return
-    df['12M_Return'] = df['Global_Market'].pct_change(periods=12)
+    df_processed['12M_Return'] = df_processed['Global_Market'].pct_change(periods=12)
     
     # Calculate the historical average of the 12-month return (expanding mean)
-    df['Historical_Avg_Return'] = df['12M_Return'].expanding().mean()
+    df_processed['Historical_Avg_Return'] = df_processed['12M_Return'].expanding().mean()
     
     # Clean NaN values caused by the rolling calculation
-    df.dropna(inplace=True)
+    df_processed.dropna(inplace=True)
     
     # Apply the rotation logic
     def determine_style(row):
@@ -48,9 +48,15 @@ def load_and_process_data(ticker="VT"):
         else:
             return 'Neutral'
             
-    df['Favored_Style'] = df.apply(determine_style, axis=1)
+    df_processed['Favored_Style'] = df_processed.apply(determine_style, axis=1)
     
-    return df
+    return df_processed
+
+# ---> THIS IS THE MISSING PART THAT CAUSED THE ERROR <---
+# We must actually call the function to create the 'df' variable
+with st.spinner("Pulling real-time market data..."):
+    df = load_and_process_data("VT")
+
 # ---------------------------------------------------------
 # 3. DASHBOARD METRICS (CURRENT STATUS)
 # ---------------------------------------------------------
